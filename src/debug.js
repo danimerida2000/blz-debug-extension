@@ -36,7 +36,8 @@ if (typeof Blz === "object") {
                         Object.assign(titleContainer.style, {
                             display: "flex",
                             justifyContent: "center",
-                            fontWeight: "bold"
+                            fontWeight: "bold",
+                            userSelect: "all"
                         });
                     }
                     if (!component || (component && component.dataset && component.parentElement)) {
