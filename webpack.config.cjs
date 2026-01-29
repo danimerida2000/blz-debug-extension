@@ -1,30 +1,52 @@
 const webpack = require('webpack');
 const ejs = require('ejs');
+const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const { VueLoaderPlugin } = require('vue-loader');
 const { version } = require('./package.json');
 
+const isProduction = process.env.NODE_ENV === 'production';
+
+/** @type {import('webpack').Configuration} */
 const config = {
-  mode: process.env.NODE_ENV,
-  context: __dirname + '/src',
+  mode: isProduction ? 'production' : 'development',
+  devtool: isProduction ? 'source-map' : 'cheap-module-source-map',
+  context: path.resolve(__dirname, 'src'),
   entry: {
-    'background': './background.js',
-    'debug': './debug.js',
-    'application/application': './application/index.js',
+    background: './background/index.ts',
+    debug: './content-scripts/debug/index.ts',
+    'popup/popup': './popup/index.ts',
   },
   output: {
-    path: __dirname + '/dist',
+    path: path.resolve(__dirname, 'dist'),
     filename: '[name].js',
+    clean: true,
   },
   resolve: {
-    extensions: ['.js', '.vue'],
+    extensions: ['.ts', '.tsx', '.js', '.vue', '.json'],
+    alias: {
+      '@': path.resolve(__dirname, 'src'),
+      '@/popup': path.resolve(__dirname, 'src/popup'),
+      '@/content-scripts': path.resolve(__dirname, 'src/content-scripts'),
+      '@/background': path.resolve(__dirname, 'src/background'),
+      '@/utils': path.resolve(__dirname, 'src/utils'),
+    },
   },
   module: {
     rules: [
       {
         test: /\.vue$/,
         loader: 'vue-loader',
+      },
+      {
+        test: /\.tsx?$/,
+        loader: 'ts-loader',
+        exclude: /node_modules/,
+        options: {
+          appendTsSuffixTo: [/\.vue$/],
+          transpileOnly: true,
+        },
       },
       {
         test: /\.js$/,
@@ -76,6 +98,7 @@ const config = {
       __VUE_OPTIONS_API__: true,
       __VUE_PROD_DEVTOOLS__: false,
       __VUE_PROD_HYDRATION_MISMATCH_DETAILS__: false,
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
     }),
     new VueLoaderPlugin(),
     new MiniCssExtractPlugin({
@@ -83,13 +106,21 @@ const config = {
     }),
     new CopyWebpackPlugin({
       patterns: [
-        { from: 'icons', to: 'icons', globOptions: { ignore: ['**/icon.xcf'] } },
-        { from: 'application/index.html', to: 'application/index.html', transform: transformHtml },
+        {
+          from: 'icons',
+          to: 'icons',
+          globOptions: { ignore: ['**/*.xcf'] },
+        },
+        {
+          from: 'popup/index.html',
+          to: 'popup/index.html',
+          transform: transformHtml,
+        },
         {
           from: 'manifest.json',
           to: 'manifest.json',
           transform: (content) => {
-            const jsonContent = JSON.parse(content);
+            const jsonContent = JSON.parse(content.toString());
             jsonContent.version = version;
             return JSON.stringify(jsonContent, null, 2);
           },
@@ -97,18 +128,22 @@ const config = {
       ],
     }),
   ],
+  optimization: {
+    minimize: isProduction,
+    splitChunks: false, // Extensions need single files per entry
+  },
+  performance: {
+    hints: isProduction ? 'warning' : false,
+    maxAssetSize: 500000,
+    maxEntrypointSize: 500000,
+  },
 };
 
-if (config.mode === 'production') {
-  config.plugins = (config.plugins || []).concat([
-    new webpack.DefinePlugin({
-      'process.env': {
-        NODE_ENV: '"production"',
-      },
-    }),
-  ]);
-}
-
+/**
+ * Transform HTML templates with EJS
+ * @param {Buffer} content
+ * @returns {string}
+ */
 function transformHtml(content) {
   return ejs.render(content.toString(), {
     ...process.env,
