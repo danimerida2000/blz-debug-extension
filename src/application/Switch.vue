@@ -1,36 +1,29 @@
-<template id="switch-button">
+<template>
   <div class="switch-button-control">
     <div
       class="switch-button"
-      :class="{ enabled: isEnabled }"
+      :class="{ enabled: modelValue }"
       @click="toggle"
-      :style="{'--color': !isEnabled ? color:'#6ee774'}"
+      :style="{ '--color': !modelValue ? color : '#6ee774' }"
     >
       <div class="button"></div>
     </div>
   </div>
 </template>
-<script>
-export default {
-  template: "#switch-button",
-  model: {
-    prop: "isEnabled",
-    event: "toggle"
-  },
-  props: {
-    isEnabled: Boolean,
-    color: {
-      type: String,
-      required: false
-    }
-  },
-  methods: {
-    toggle: function() {
-      //chrome.storage.local.set(!this.isEnabled);
-      this.$emit("toggle", !this.isEnabled);
-    }
+
+<script setup>
+defineProps({
+  color: {
+    type: String,
+    default: '#ECEFF1'
   }
-};
+})
+
+const modelValue = defineModel({ type: Boolean, default: false })
+
+function toggle() {
+  modelValue.value = !modelValue.value
+}
 </script>
 
 <style scoped>

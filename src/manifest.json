@@ -2,32 +2,38 @@
   "name": "blz-debug-extension",
   "description": "An extension to debug blazed path applications",
   "version": "1.0.0",
-  "manifest_version": 2,
+  "manifest_version": 3,
   "icons": {
     "48": "icons/logo.svg",
     "128": "icons/logo.svg"
   },
   "permissions": [
-    "<all_urls>",
-    "*://*/*",
     "activeTab",
     "tabs",
     "cookies",
-    "background",
     "storage",
-    "notifications"
+    "notifications",
+    "scripting"
   ],
-  "browser_action": {
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
     "default_title": "Debug blazed application",
     "default_popup": "application/index.html"
   },
   "background": {
-    "scripts": ["background.js"]
+    "service_worker": "background.js"
   },
   "content_scripts": [
     {
-      "matches": ["http://*/*", "https://*/*"],
-      "js": ["debug.js"],
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "debug.js"
+      ],
       "run_at": "document_end",
       "all_frames": true
     }

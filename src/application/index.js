@@ -1,8 +1,7 @@
-import Vue from 'vue'
-import App from './App'
+import { createApp } from 'vue'
+import App from './App.vue'
+import browser from 'webextension-polyfill'
 
-global.browser = require('webextension-polyfill')
-Vue.prototype.$browser = global.browser;
-new Vue({
-  render: h => h(App)
-}).$mount("#app");
+const app = createApp(App)
+app.config.globalProperties.$browser = browser
+app.mount('#app')

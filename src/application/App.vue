@@ -1,23 +1,15 @@
 <template>
   <div id="app">
-    <switchButton v-model="blzSwitch" color="#ECEFF1"></switchButton>
+    <SwitchButton v-model="blzSwitch" color="#ECEFF1" />
     <section class="blz-switch-title">Debug blazed application</section>
   </div>
 </template>
 
-<script>
-import switchButton from "./Switch";
-export default {
-  name: "App",
-  components: {
-    switchButton
-  },
-  data: function() {
-    return {
-      blzSwitch: false
-    };
-  }
-};
+<script setup>
+import { ref } from 'vue'
+import SwitchButton from './Switch.vue'
+
+const blzSwitch = ref(false)
 </script>
 
 <style>
